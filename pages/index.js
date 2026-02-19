@@ -94,25 +94,25 @@ export default function Home() {
             {[
               {
                 name: "Raitter Berineads",
-                price: "£150.00 / item",
+                price: "₦1500 / item",
                 badge: "Best",
                 image: "/assets/images/menu-plantain.jpg",
               },
               {
                 name: "Pest Kinger",
-                price: "£114.00 / item",
+                price: "₦1140 / item",
                 badge: "Hot",
                 image: "/assets/images/menu-chicken.jpg",
               },
               {
                 name: "Fast Bedivery",
-                price: "£152.00 / item",
+                price: "₦1520 / item",
                 badge: "New",
                 image: "/assets/images/riceAndChicken.jpg",
               },
               {
                 name: "Crispy Deluxe",
-                price: "£132.00 / item",
+                price: "₦1320 / item",
                 badge: "Chef",
                 image: "/assets/images/menu-pizza.jpg",
               },
