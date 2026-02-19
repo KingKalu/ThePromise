@@ -181,7 +181,7 @@ export default function Home() {
             <div className="bottom-right-card">
               <div className="bottom-right-image-box">
                 <img
-                  src="/assets/images/hero-burger.png"
+                  src="/assets/images/chicken-curry.png"
                   alt="Refreshing drink and sides"
                   className="hero-burger-image"
                 />
