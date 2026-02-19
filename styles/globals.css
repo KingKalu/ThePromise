@@ -601,9 +601,12 @@ button {
   flex-direction: column;
   gap: 10px;
 }
-
-.bottom-right-image-box {
-  width: 200px;
+.bottom-right-image-box{
+  display: flex;
+  justify-content: center;
+}
+.bottom-right-image-box img{
+  width: 300px;
   aspect-ratio: 1;
 }
 

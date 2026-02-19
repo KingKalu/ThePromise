@@ -183,7 +183,6 @@ export default function Home() {
                 <img
                   src="/assets/images/chicken-curry.png"
                   alt="Refreshing drink and sides"
-                  className="hero-burger-image"
                 />
               </div>
               <h3 className="bottom-right-title">Sarcy Blarth</h3>
