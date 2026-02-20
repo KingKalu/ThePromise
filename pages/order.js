@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
-import { Button } from "@mui/material";
+import { Button, MenuItem, TextField } from "@mui/material";
 import AppShell from "@/components/layout/AppShell";
 import { createOrder, getBranches, getMenu, getOrders } from "@/lib/api";
 
@@ -216,17 +216,20 @@ export default function OrderPage() {
                   </div>
                   <div className="order-main-field order-main-branch">
                     <span className="order-main-field-label">Branch</span>
-                    <select
+                    <TextField
+                      size="small"
+                      select
                       value={branchId}
                       onChange={(event) => setBranchId(event.target.value)}
                       className="order-main-branch-select"
+                      sx={{ bgcolor: "background.paper" }}
                     >
                       {branches.map((branch) => (
-                        <option key={branch.id} value={branch.id}>
+                        <MenuItem key={branch.id} value={branch.id}>
                           {branch.name}
-                        </option>
+                        </MenuItem>
                       ))}
-                    </select>
+                    </TextField>
                   </div>
                 </div>
 
