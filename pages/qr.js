@@ -1,6 +1,18 @@
 import { useEffect, useState } from "react";
 import Head from "next/head";
-import Link from "next/link";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Grid,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import AppShell from "@/components/layout/AppShell";
 import { getBranches } from "@/lib/api";
 
 export default function QRPage() {
@@ -11,11 +23,11 @@ export default function QRPage() {
   useEffect(() => {
     async function load() {
       try {
-        const b = await getBranches();
-        setBranches(b);
-        setBranchId(b[0]?.id || "");
-      } catch (e) {
-        console.error(e);
+        const loadedBranches = await getBranches();
+        setBranches(loadedBranches);
+        setBranchId(loadedBranches[0]?.id || "");
+      } catch (error) {
+        console.error(error);
       }
     }
     load();
@@ -25,86 +37,81 @@ export default function QRPage() {
     if (!branchId) return;
     const table = tableCode || "TBL-001";
     window.location.href = `/order?mode=dine-in&table=${encodeURIComponent(
-      table
+      table,
     )}&branch=${encodeURIComponent(branchId)}`;
   }
 
   return (
     <>
       <Head>
-        <title>QR Table Ordering • The Promise Smart Dining Platform</title>
+        <title>QR Table Ordering | The Promise Smart Dining Platform</title>
         <meta
           name="description"
-          content="Simulated QR ordering flow connecting the guest’s table identity to the digital ordering experience."
+          content="Simulated QR ordering flow connecting a table identity to the digital ordering journey."
         />
       </Head>
-      <header className="header">
-        <div className="container topbar">
-          <div className="brand">
-            <div className="logo" />
-            <div className="brand-title">The Promise</div>
-          </div>
-          <nav className="nav">
-            <Link href="/">Home</Link>
-            <Link href="/order">Order</Link>
-            <Link href="/kitchen">Kitchen</Link>
-            <Link href="/admin">Head Office</Link>
-          </nav>
-        </div>
-      </header>
-      <main className="section">
-        <div className="container split">
-          <section className="card">
-            <h3>QR Table Ordering Flow</h3>
-            <div className="stack">
-              <div className="tag">
-                In production, guests scan a unique table QR code. This demo
-                simulates the same flow.
-              </div>
-              <input
-                className="input"
-                placeholder="Enter table code from QR (e.g., TBL-A12)"
-                value={tableCode}
-                onChange={e => setTableCode(e.target.value)}
-              />
-              <select
-                value={branchId}
-                onChange={e => setBranchId(e.target.value)}
-                className="input"
-              >
-                {branches.map(b => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-              <button className="btn primary" onClick={handleStart}>
-                Start Dine-In Order
-              </button>
-            </div>
-          </section>
-          <section className="card">
-            <h3>Demo Journey</h3>
-            <div className="order-steps">
-              <span className="step-pill active">1. QR Scan</span>
-              <span className="step-pill">2. Smart Menu</span>
-              <span className="step-pill">3. Secure Payment</span>
-              <span className="step-pill">4. Order Status</span>
-            </div>
-            <div className="tag" style={{ marginTop: 10 }}>
-              The Promise binds device, table, and branch together, unlocking
-              precise analytics and service orchestration for your operations
-              teams.
-            </div>
-          </section>
-        </div>
-      </main>
-      <footer className="footer">
-        <div className="container">
-          QR Ordering Demo • From physical table to digital operations in a
-          single scan.
-        </div>
-      </footer>
+      <AppShell footerText="QR ordering demo | From table scan to branch-aware order routing.">
+        <Container maxWidth="lg" sx={{ py: { xs: 3.5, md: 5.5 } }}>
+          <Grid container spacing={2.2}>
+            <Grid size={{ xs: 12, md: 6.5 }}>
+              <Card>
+                <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
+                  <Typography variant="h5" sx={{ mb: 1.5 }}>
+                    QR Table Ordering Flow
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: "text.secondary", mb: 2.2 }}>
+                    In production, each table has a unique QR code. This demo simulates the same journey in a controlled environment.
+                  </Typography>
+                  <Stack spacing={1.3}>
+                    <TextField
+                      size="small"
+                      label="Table Code"
+                      placeholder="TBL-A12"
+                      value={tableCode}
+                      onChange={(event) => setTableCode(event.target.value)}
+                    />
+                    <TextField
+                      size="small"
+                      select
+                      label="Branch"
+                      value={branchId}
+                      onChange={(event) => setBranchId(event.target.value)}
+                    >
+                      {branches.map((branch) => (
+                        <MenuItem key={branch.id} value={branch.id}>
+                          {branch.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                    <Button variant="contained" onClick={handleStart}>
+                      Start Dine-In Order
+                    </Button>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, md: 5.5 }}>
+              <Card className="h-full bg-gradient-to-br from-amber-100 to-orange-100">
+                <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
+                  <Typography variant="h6">Demo Journey</Typography>
+                  <Stack spacing={1} sx={{ mt: 1.5 }}>
+                    {[
+                      "1. Guest scans table QR",
+                      "2. Device opens branch-scoped menu",
+                      "3. Order enters kitchen queue",
+                      "4. Status syncs to kitchen and head office",
+                    ].map((item) => (
+                      <Box key={item} sx={{ p: 1.1, borderRadius: 1.5, bgcolor: "rgba(255,255,255,0.7)" }}>
+                        <Typography variant="body2">{item}</Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Container>
+      </AppShell>
     </>
   );
 }

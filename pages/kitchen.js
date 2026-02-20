@@ -1,7 +1,37 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Head from "next/head";
-import Link from "next/link";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Container,
+  Grid,
+  LinearProgress,
+  MenuItem,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from "@mui/material";
+import AppShell from "@/components/layout/AppShell";
 import { getBranches, getOrders, updateOrderStatus } from "@/lib/api";
+
+const ORDER_STEPS = ["Received", "In Kitchen", "Ready", "Served"];
+
+function statusColor(status) {
+  if (status === "Served") return "success";
+  if (status === "Ready") return "secondary";
+  if (status === "In Kitchen") return "warning";
+  return "default";
+}
 
 export default function KitchenPage() {
   const [branches, setBranches] = useState([]);
@@ -11,12 +41,11 @@ export default function KitchenPage() {
   useEffect(() => {
     async function loadBranches() {
       try {
-        const b = await getBranches();
-        setBranches(b);
-        const first = b[0]?.id || "";
-        setBranchId(first);
-      } catch (e) {
-        console.error(e);
+        const loadedBranches = await getBranches();
+        setBranches(loadedBranches);
+        setBranchId(loadedBranches[0]?.id || "");
+      } catch (error) {
+        console.error(error);
       }
     }
     loadBranches();
@@ -24,161 +53,205 @@ export default function KitchenPage() {
 
   useEffect(() => {
     let timer;
-    async function poll() {
+    async function pollOrders() {
       if (!branchId) return;
       try {
         const data = await getOrders(branchId);
         setOrders(data);
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error(error);
       }
     }
-    poll();
-    timer = setInterval(poll, 3000);
+    pollOrders();
+    timer = setInterval(pollOrders, 3000);
     return () => clearInterval(timer);
   }, [branchId]);
 
-  async function advance(o) {
-    const map = ["Received", "In Kitchen", "Ready", "Served"];
-    const nextIndex = Math.min((o.stepIndex || 0) + 1, map.length - 1);
-    const nextStatus = map[nextIndex];
+  async function advanceOrder(order) {
+    const nextIndex = Math.min((order.stepIndex || 0) + 1, ORDER_STEPS.length - 1);
+    const nextStatus = ORDER_STEPS[nextIndex];
     try {
-      await updateOrderStatus(o.id, nextStatus);
-      const data = await getOrders(branchId);
-      setOrders(data);
-    } catch (e) {
-      console.error(e);
+      await updateOrderStatus(order.id, nextStatus);
+      const updated = await getOrders(branchId);
+      setOrders(updated);
+    } catch (error) {
+      console.error(error);
     }
   }
+
+  const metrics = useMemo(() => {
+    const served = orders.filter((order) => order.status === "Served").length;
+    const inKitchen = orders.filter((order) => order.status === "In Kitchen").length;
+    const ready = orders.filter((order) => order.status === "Ready").length;
+    const active = orders.length - served;
+    return { served, inKitchen, ready, active };
+  }, [orders]);
+
+  const branchName = branches.find((branch) => branch.id === branchId)?.name;
 
   return (
     <>
       <Head>
-        <title>Kitchen Dashboard • The Promise Smart Dining Platform</title>
+        <title>Kitchen Dashboard | The Promise Smart Dining Platform</title>
         <meta
           name="description"
-          content="Branch operations interface for live incoming orders, preparation tracking, and staff management."
+          content="Kitchen operations workspace for live incoming orders, preparation flow, and service completion tracking."
         />
       </Head>
-      <header className="header">
-        <div className="container topbar">
-          <div className="brand">
-            <div className="logo" />
-            <div className="brand-title">The Promise</div>
-          </div>
-          <nav className="nav">
-            <Link href="/">Home</Link>
-            <Link href="/order">Order</Link>
-            <Link href="/kitchen">Kitchen</Link>
-            <Link href="/admin">Head Office</Link>
-          </nav>
-        </div>
-      </header>
-      <main className="section">
-        <div className="container stack">
-          <div className="row">
-            <select
-              value={branchId}
-              onChange={(e) => setBranchId(e.target.value)}
-              className="input"
-              style={{ maxWidth: 220 }}
-            >
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-            <span className="pill">Live incoming orders</span>
-          </div>
-
-          <div className="card">
-            <h3>Orders</h3>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Customer</th>
-                  <th>Mode</th>
-                  <th>Table</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((o) => (
-                  <tr key={o.id}>
-                    <td>{o.orderNumber}</td>
-                    <td>{o.customerName}</td>
-                    <td>{o.mode}</td>
-                    <td>{o.tableCode || "-"}</td>
-                    <td>{o.totalFormatted}</td>
-                    <td>
-                      <span
-                        className={
-                          "status " + o.status.toLowerCase().replace(" ", "-")
-                        }
-                      >
-                        {o.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="btn" onClick={() => advance(o)}>
-                        Advance
-                      </button>
-                    </td>
-                  </tr>
+      <AppShell footerText="Kitchen dashboard | Real-time queue, dispatch pacing, and service completion.">
+        <Container maxWidth="lg" sx={{ py: { xs: 3.5, md: 5 } }}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1.4} alignItems={{ xs: "stretch", md: "center" }} justifyContent="space-between" sx={{ mb: 2.2 }}>
+            <Box>
+              <Typography variant="h4">Kitchen Command Center</Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.6 }}>
+                Track live orders by branch and move items from prep to service in one view.
+              </Typography>
+            </Box>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+              <TextField
+                size="small"
+                select
+                value={branchId}
+                onChange={(event) => setBranchId(event.target.value)}
+                sx={{ minWidth: 220, bgcolor: "background.paper" }}
+              >
+                {branches.map((branch) => (
+                  <MenuItem key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </MenuItem>
                 ))}
-                {orders.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="tag">
-                      No orders yet. Place one from the customer module.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              </TextField>
+              <Chip label="Live updates every 3s" color="primary" />
+            </Stack>
+          </Stack>
 
-          <div className="card">
-            <h3>Daily Sales</h3>
-            <div className="tag">
-              Branch performance summary for today (demo)
-            </div>
-            <div className="kpi-grid" style={{ marginTop: 8 }}>
-              <div className="kpi-card">
-                <div className="kpi-label">Orders</div>
-                <div className="kpi-value">{orders.length}</div>
-              </div>
-              <div className="kpi-card">
-                <div className="kpi-label">Served</div>
-                <div className="kpi-value">
-                  {orders.filter((o) => o.status === "Served").length}
-                </div>
-              </div>
-              <div className="kpi-card">
-                <div className="kpi-label">In Kitchen</div>
-                <div className="kpi-value">
-                  {orders.filter((o) => o.status === "In Kitchen").length}
-                </div>
-              </div>
-              <div className="kpi-card">
-                <div className="kpi-label">Ready</div>
-                <div className="kpi-value">
-                  {orders.filter((o) => o.status === "Ready").length}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-      <footer className="footer">
-        <div className="container">
-          Branch Operations • Kitchen dashboards, staff actions, and daily
-          views.
-        </div>
-      </footer>
+          <Grid container spacing={1.8} sx={{ mb: 2.2 }}>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Orders Today
+                  </Typography>
+                  <Typography variant="h4">{orders.length}</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Active Queue
+                  </Typography>
+                  <Typography variant="h4">{metrics.active}</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    In Kitchen
+                  </Typography>
+                  <Typography variant="h4">{metrics.inKitchen}</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Served
+                  </Typography>
+                  <Typography variant="h4">{metrics.served}</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+
+          <Card sx={{ mb: 2.2 }}>
+            <CardContent>
+              <Typography variant="h6">Live Orders {branchName ? `- ${branchName}` : ""}</Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary", mb: 1.4 }}>
+                Use the advance action to move orders through the kitchen flow.
+              </Typography>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Order</TableCell>
+                      <TableCell>Customer</TableCell>
+                      <TableCell>Mode</TableCell>
+                      <TableCell>Table</TableCell>
+                      <TableCell>Total</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell align="right">Action</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {orders.map((order) => (
+                      <TableRow key={order.id} hover>
+                        <TableCell>{order.orderNumber}</TableCell>
+                        <TableCell>{order.customerName}</TableCell>
+                        <TableCell sx={{ textTransform: "capitalize" }}>{order.mode}</TableCell>
+                        <TableCell>{order.tableCode || "-"}</TableCell>
+                        <TableCell>{order.totalFormatted}</TableCell>
+                        <TableCell>
+                          <Chip size="small" label={order.status} color={statusColor(order.status)} />
+                        </TableCell>
+                        <TableCell align="right">
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => advanceOrder(order)}
+                            disabled={order.status === "Served"}
+                          >
+                            Advance
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              {orders.length === 0 ? (
+                <Alert sx={{ mt: 1.5 }} severity="info">
+                  No orders yet. Create an order from the customer module to see live kitchen activity.
+                </Alert>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-amber-100 to-orange-100">
+            <CardContent>
+              <Typography variant="h6">Service Flow Snapshot</Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary", mb: 1.4 }}>
+                Fast glance at where workload is currently concentrated.
+              </Typography>
+              <Grid container spacing={1.2}>
+                {ORDER_STEPS.map((step, index) => {
+                  const count = orders.filter((order) => order.stepIndex >= index).length;
+                  const percentage = orders.length ? (count / orders.length) * 100 : 0;
+                  return (
+                    <Grid key={step} size={{ xs: 12, md: 3 }}>
+                      <Typography variant="body2" sx={{ mb: 0.4 }}>
+                        {step}
+                      </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={percentage}
+                        sx={{ height: 9, borderRadius: 20, bgcolor: "rgba(255,255,255,0.7)" }}
+                      />
+                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                        {count} orders
+                      </Typography>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            </CardContent>
+          </Card>
+        </Container>
+      </AppShell>
     </>
   );
 }

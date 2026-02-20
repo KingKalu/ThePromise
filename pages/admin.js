@@ -1,7 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Head from "next/head";
-import Link from "next/link";
-import { getOverviewAnalytics, getBranches } from "@/lib/api";
+import {
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  Container,
+  Grid,
+  LinearProgress,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
+import AppShell from "@/components/layout/AppShell";
+import { getBranches, getOverviewAnalytics } from "@/lib/api";
+
+function levelForHour(value, maxHourly) {
+  if (!value) return 0;
+  const ratio = value / maxHourly;
+  if (ratio > 0.66) return 3;
+  if (ratio > 0.33) return 2;
+  return 1;
+}
 
 export default function AdminPage() {
   const [analytics, setAnalytics] = useState(null);
@@ -10,14 +35,11 @@ export default function AdminPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [a, b] = await Promise.all([
-          getOverviewAnalytics(),
-          getBranches()
-        ]);
+        const [a, b] = await Promise.all([getOverviewAnalytics(), getBranches()]);
         setAnalytics(a);
         setBranches(b);
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error(error);
       }
     }
     load();
@@ -30,201 +52,229 @@ export default function AdminPage() {
   const best = analytics?.bestSellers || {};
   const behavior = analytics?.behavior || {};
 
-  const maxHourly = Math.max(1, ...Object.values(hourly));
+  const totalRevenue = useMemo(
+    () => Object.values(branchTotals).reduce((acc, value) => acc + value, 0),
+    [branchTotals],
+  );
+
+  const maxBranch = Math.max(1, ...Object.values(branchTotals), 1);
+  const maxHourly = Math.max(1, ...Object.values(hourly), 1);
 
   return (
     <>
       <Head>
-        <title>Head Office Dashboard • The Promise Smart Dining Platform</title>
+        <title>Head Office Dashboard | The Promise Smart Dining Platform</title>
         <meta
           name="description"
-          content="Central analytics workspace for multi-branch performance, revenue charts, peak hours, best sellers, and customer behavior."
+          content="Central analytics workspace for branch performance, demand windows, best sellers, and customer behavior."
         />
       </Head>
-      <header className="header">
-        <div className="container topbar">
-          <div className="brand">
-            <div className="logo" />
-            <div className="brand-title">The Promise</div>
-          </div>
-          <nav className="nav">
-            <Link href="/">Home</Link>
-            <Link href="/order">Order</Link>
-            <Link href="/kitchen">Kitchen</Link>
-            <Link href="/admin">Head Office</Link>
-          </nav>
-        </div>
-      </header>
-      <main className="section">
-        <div className="container stack">
-          <section className="kpi-grid">
-            <div className="kpi-card">
-              <div className="kpi-label">Branches</div>
-              <div className="kpi-value">{branches.length}</div>
-            </div>
-            <div className="kpi-card">
-              <div className="kpi-label">Total Revenue (All Branches)</div>
-              <div className="kpi-value">
-                ₦
-                {Object.values(branchTotals)
-                  .reduce((a, v) => a + v, 0)
-                  .toLocaleString()}
-              </div>
-            </div>
-            <div className="kpi-card">
-              <div className="kpi-label">Dine-in vs Takeaway</div>
-              <div className="kpi-value">
-                {behavior.dineIn || 0} dine-in • {behavior.takeaway || 0} takeaway
-              </div>
-            </div>
-            <div className="kpi-card">
-              <div className="kpi-label">Avg Basket Size</div>
-              <div className="kpi-value">
-                ₦{(behavior.avgBasket || 0).toFixed(0)}
-              </div>
-            </div>
-          </section>
+      <AppShell footerText="Head office dashboard | Branch performance and behavior intelligence.">
+        <Container maxWidth="lg" sx={{ py: { xs: 3.5, md: 5 } }}>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", md: "center" }}
+            spacing={1.2}
+            sx={{ mb: 2.3 }}
+          >
+            <Box>
+              <Typography variant="h4">Head Office Intelligence</Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.6 }}>
+                Unified performance visibility across all branches, products, and customer sessions.
+              </Typography>
+            </Box>
+            <Chip label="Auto-refresh every 5s" color="primary" />
+          </Stack>
 
-          <section className="split">
-            <div className="card">
-              <h3>Multi-Branch Performance</h3>
-              <div className="tag">
-                Compare revenue by branch to understand relative performance.
-              </div>
-              <div className="chart" style={{ marginTop: 10 }}>
-                {branches.map(b => {
-                  const value = branchTotals[b.id] || 0;
-                  const max = Math.max(
-                    1,
-                    ...Object.values(branchTotals),
-                    value
-                  );
-                  const height = (value / max) * 100 || 5;
-                  return (
-                    <div
-                      key={b.id}
-                      style={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "flex-end",
-                        alignItems: "center",
-                        gap: 4
-                      }}
-                    >
-                      <div
-                        className="chart-bar"
-                        style={{ height: `${height}%` }}
-                      />
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: "var(--subtext)",
-                          textAlign: "center"
-                        }}
-                      >
-                        {b.name.split(" ")[0]}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="card">
-              <h3>Peak Hour Heatmap</h3>
-              <div className="tag">
-                Visualizes hourly revenue intensity across the current day.
-              </div>
-              <div className="heatmap" style={{ marginTop: 10 }}>
-                {Array.from({ length: 12 }).map((_, idx) => {
-                  const hour = idx + 11;
-                  const value = hourly[hour] || 0;
-                  const level =
-                    value === 0
-                      ? 0
-                      : value / maxHourly > 0.66
-                      ? 3
-                      : value / maxHourly > 0.33
-                      ? 2
-                      : 1;
-                  const label = hour.toString().padStart(2, "0") + ":00";
-                  return (
-                    <div
-                      key={hour}
-                      className={
-                        "heat-cell" +
-                        (level ? ` level-${level}` : "")
-                      }
-                      title={label}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          </section>
+          <Grid container spacing={1.8} sx={{ mb: 2.2 }}>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Branches
+                  </Typography>
+                  <Typography variant="h4">{branches.length}</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Total Revenue
+                  </Typography>
+                  <Typography variant="h5">NGN {totalRevenue.toLocaleString()}</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Dine-in vs Takeaway
+                  </Typography>
+                  <Typography variant="h6">
+                    {behavior.dineIn || 0} / {behavior.takeaway || 0}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Avg Basket
+                  </Typography>
+                  <Typography variant="h5">
+                    NGN {(behavior.avgBasket || 0).toFixed(0)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
 
-          <section className="split">
-            <div className="card">
-              <h3>Best-Selling Items per Branch</h3>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Branch</th>
-                    <th>Item</th>
-                    <th>Qty</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {branches.map(b => {
-                    const row = best[b.id];
-                    return (
-                      <tr key={b.id}>
-                        <td>{b.name}</td>
-                        <td>{row?.name || "No data yet"}</td>
-                        <td>{row?.qty || "-"}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <div className="card">
-              <h3>Customer Behavior Metrics</h3>
-              <div className="tag">
-                High-level view of how guests interact with your estate.
-              </div>
-              <div className="kpi-grid" style={{ marginTop: 8 }}>
-                <div className="kpi-card">
-                  <div className="kpi-label">Dine-in Sessions</div>
-                  <div className="kpi-value">{behavior.dineIn || 0}</div>
-                </div>
-                <div className="kpi-card">
-                  <div className="kpi-label">Takeaway Sessions</div>
-                  <div className="kpi-value">{behavior.takeaway || 0}</div>
-                </div>
-                <div className="kpi-card">
-                  <div className="kpi-label">Repeat Customers</div>
-                  <div className="kpi-value">
-                    {behavior.repeatCustomers || 0}
-                  </div>
-                </div>
-                <div className="kpi-card">
-                  <div className="kpi-label">Typical Basket</div>
-                  <div className="kpi-value">
-                    ₦{(behavior.avgBasket || 0).toFixed(0)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-      </main>
-      <footer className="footer">
-        <div className="container">
-          Head Office • Centralized, investor-ready analytics on top of live
-          restaurant operations.
-        </div>
-      </footer>
+          <Grid container spacing={1.8} sx={{ mb: 2.2 }}>
+            <Grid size={{ xs: 12, md: 7 }}>
+              <Card sx={{ height: "100%" }}>
+                <CardContent>
+                  <Typography variant="h6">Multi-Branch Performance</Typography>
+                  <Typography variant="body2" sx={{ color: "text.secondary", mb: 1.4 }}>
+                    Revenue comparison by branch.
+                  </Typography>
+                  <Stack spacing={1.1}>
+                    {branches.map((branch) => {
+                      const value = branchTotals[branch.id] || 0;
+                      const percentage = (value / maxBranch) * 100;
+                      return (
+                        <Box key={branch.id}>
+                          <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.4 }}>
+                            <Typography variant="body2">{branch.name}</Typography>
+                            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                              NGN {value.toLocaleString()}
+                            </Typography>
+                          </Stack>
+                          <LinearProgress
+                            variant="determinate"
+                            value={percentage}
+                            sx={{ height: 10, borderRadius: 20, bgcolor: "rgba(122, 78, 43, 0.12)" }}
+                          />
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 5 }}>
+              <Card className="h-full bg-gradient-to-br from-amber-100 to-orange-100">
+                <CardContent>
+                  <Typography variant="h6">Peak Hour Heatmap</Typography>
+                  <Typography variant="body2" sx={{ color: "text.secondary", mb: 1.4 }}>
+                    Hourly demand intensity for the active day.
+                  </Typography>
+                  <Grid container spacing={0.8}>
+                    {Array.from({ length: 12 }).map((_, idx) => {
+                      const hour = idx + 11;
+                      const value = hourly[hour] || 0;
+                      const level = levelForHour(value, maxHourly);
+                      const backgroundByLevel = {
+                        0: "#fff6e8",
+                        1: "#fde4b6",
+                        2: "#f8bc61",
+                        3: "#d65a31",
+                      };
+                      return (
+                        <Grid size={{ xs: 3 }} key={hour}>
+                          <Box
+                            sx={{
+                              borderRadius: 1.5,
+                              p: 0.9,
+                              textAlign: "center",
+                              bgcolor: backgroundByLevel[level],
+                              border: "1px solid rgba(60,36,0,0.12)",
+                            }}
+                            title={`${hour}:00`}
+                          >
+                            <Typography variant="caption" sx={{ display: "block" }}>
+                              {hour}:00
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                              {value ? value.toLocaleString() : "-"}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+
+          <Grid container spacing={1.8}>
+            <Grid size={{ xs: 12, md: 7 }}>
+              <Card sx={{ height: "100%" }}>
+                <CardContent>
+                  <Typography variant="h6">Best Sellers by Branch</Typography>
+                  <TableContainer sx={{ mt: 1 }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Branch</TableCell>
+                          <TableCell>Best Item</TableCell>
+                          <TableCell align="right">Qty</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {branches.map((branch) => {
+                          const row = best[branch.id];
+                          return (
+                            <TableRow key={branch.id}>
+                              <TableCell>{branch.name}</TableCell>
+                              <TableCell>{row?.name || "No data yet"}</TableCell>
+                              <TableCell align="right">{row?.qty || "-"}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 5 }}>
+              <Card sx={{ height: "100%" }}>
+                <CardContent>
+                  <Typography variant="h6">Customer Behavior</Typography>
+                  <Stack spacing={1.2} sx={{ mt: 1.2 }}>
+                    <Box sx={{ p: 1.2, borderRadius: 1.4, bgcolor: "rgba(245, 205, 140, 0.25)" }}>
+                      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                        Dine-in Sessions
+                      </Typography>
+                      <Typography variant="h6">{behavior.dineIn || 0}</Typography>
+                    </Box>
+                    <Box sx={{ p: 1.2, borderRadius: 1.4, bgcolor: "rgba(245, 205, 140, 0.25)" }}>
+                      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                        Takeaway Sessions
+                      </Typography>
+                      <Typography variant="h6">{behavior.takeaway || 0}</Typography>
+                    </Box>
+                    <Box sx={{ p: 1.2, borderRadius: 1.4, bgcolor: "rgba(245, 205, 140, 0.25)" }}>
+                      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                        Repeat Customers
+                      </Typography>
+                      <Typography variant="h6">{behavior.repeatCustomers || 0}</Typography>
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Container>
+      </AppShell>
     </>
   );
 }
