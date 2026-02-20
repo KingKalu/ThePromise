@@ -1,16 +1,14 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-
 :root {
   --bg: #fff6e6;
   --panel: #ffffff;
   --muted: #f5e1c4;
   --text: #3b0b0b;
   --subtext: #7f1d1d;
-  --primary: #e11d27;
+  --primary: #c90e21;
   --primary-soft: #ffcc4a;
   --accent: #ffd76a;
   --success: #22c55e;
-  --danger: #b91c1c;
+  --danger: #c90e21;
   --warning: #f97316;
   --border-subtle: rgba(249, 115, 22, 0.25);
   --card: #fff5de;
@@ -30,8 +28,7 @@ body,
 
 body {
   margin: 0;
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: var(--font-sora), "Segoe UI", system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
 }
@@ -70,7 +67,7 @@ button {
 .brand {
   padding: 10px;
    border: 10px solid #ffd43b ;
-  background:#b90913 ;
+  background:#b80d1e ;
   border-radius: 200px;
 
 }
@@ -84,7 +81,7 @@ button {
 }
 
 .hero-burger {
-  background: linear-gradient(135deg, #ec1c24 0%, #b90913 60%, #ffe28a 60%, #ffe28a 100%);
+  background: linear-gradient(135deg, #c90e21 0%, #b80d1e 60%, #ffe28a 60%, #ffe28a 100%);
 }
 
 .hero-burger-grid {
@@ -216,8 +213,8 @@ button {
 }
 
 .category-pill-red {
-  background: #ec1c24;
-  color: #ec1c24;
+  background: #c90e21;
+  color: #c90e21;
 }
 
 .category-pill-yellow {
@@ -257,19 +254,31 @@ button {
 }
 
 .order-main-top {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
   gap: 12px;
-  align-items: center;
+  align-items: end;
+}
+
+.order-main-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-main-field-label {
+  font-size: 11px;
+  color: #7f1d1d;
 }
 
 .order-search {
-  flex: 1;
+  min-width: 0;
 }
 
 .order-search-input {
   width: 100%;
-  padding: 10px 12px;
+  height: 38px;
+  padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: #fffdf6;
@@ -277,18 +286,12 @@ button {
 }
 
 .order-main-branch {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.order-main-branch-label {
-  font-size: 11px;
-  color: #7f1d1d;
+  min-width: 0;
 }
 
 .order-main-branch-select {
-  min-width: 160px;
+  width: 100%;
+  height: 38px;
   padding: 8px 10px;
   border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -319,7 +322,7 @@ button {
 .order-category-pill-active {
   border-color: transparent;
   background: #fff3bf;
-  color: #b91c1c;
+  color: #c90e21;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
@@ -594,7 +597,7 @@ button {
 
 .bottom-right-card {
   border-radius: 24px;
-  background: #ec1c24;
+  background: #c90e21;
   padding: 20px 18px;
   color: #ffe4ba;
   display: flex;
@@ -682,7 +685,7 @@ button {
 }
 
 .order-mode-pill-active {
-  background: #ec1c24;
+  background: #c90e21;
   color: #fff7e6;
 }
 
@@ -766,7 +769,7 @@ button {
 .brand-title {
   font-weight: 700;
   letter-spacing: 0.2px;
-  color: #b91c1c;
+  color: #c90e21;
 }
 
 .nav {
@@ -782,7 +785,7 @@ button {
 }
 
 .nav a:hover {
-  color: #b91c1c;
+  color: #c90e21;
   background: rgba(255, 255, 255, 0.4);
 }
 
@@ -803,14 +806,14 @@ button {
 
 .btn.primary {
   border-color: transparent;
-  background: linear-gradient(135deg, #ec1c24, #b90913);
+  background: linear-gradient(135deg, #c90e21, #b80d1e);
   color: #fff7e6;
 }
 
 .btn.accent {
   border-color: rgba(0, 0, 0, 0.06);
   background: #ffeab8;
-  color: #b91c1c;
+  color: #c90e21;
 }
 
 .btn.outline {
@@ -969,7 +972,7 @@ button {
 
 .pill-tab.active {
   background: #ffffff;
-  color: #b91c1c;
+  color: #c90e21;
 }
 
 .footer {
@@ -1007,12 +1010,12 @@ button {
 
 .status.received {
   background: #fee2e2;
-  color: #b91c1c;
+  color: #c90e21;
 }
 
 .status.in-kitchen {
   background: #fecaca;
-  color: #b91c1c;
+  color: #c90e21;
 }
 
 .status.ready {
@@ -1021,7 +1024,7 @@ button {
 }
 
 .status.served {
-  background: #b91c1c;
+  background: #c90e21;
   color: #fee2e2;
 }
 
@@ -1063,7 +1066,7 @@ button {
 .chart-bar {
   flex: 1;
   border-radius: 999px;
-  background: linear-gradient(180deg, #ec1c24, #b90913);
+  background: linear-gradient(180deg, #c90e21, #b80d1e);
 }
 
 .heatmap {
@@ -1088,7 +1091,7 @@ button {
 }
 
 .heat-cell.level-3 {
-  background: #ec1c24;
+  background: #c90e21;
 }
 
 .menu-grid {
@@ -1180,7 +1183,7 @@ button {
 
 .step-pill.active {
   border-color: transparent;
-  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  background: linear-gradient(135deg, #de2335, #c90e21);
 }
 
 .status-strip {
@@ -1197,7 +1200,7 @@ button {
 }
 
 .status-dot.active {
-  background: linear-gradient(90deg, #fecaca, #ef4444);
+  background: linear-gradient(90deg, #fecaca, #de2335);
 }
 
 .pill-small {
@@ -1286,7 +1289,7 @@ button {
 
 .chat-bubble.user {
   align-self: flex-end;
-  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  background: linear-gradient(135deg, #de2335, #c90e21);
   color: #fef2f2;
 }
 
@@ -1338,6 +1341,10 @@ button {
 }
 
 @media (max-width: 640px) {
+  .order-main-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .metrics {
     grid-template-columns: minmax(0, 1fr);
   }
